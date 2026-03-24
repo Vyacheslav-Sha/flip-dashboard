@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLIP PROJECT — Финансовая модель + ЦИАН</title>
+<style>
+  :root {
+    --dark: #0f0f1a;
+    --card: #1a1a2e;
+    --card2: #16213e;
+    --accent: #00b4d8;
+    --gold: #d4a537;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --orange: #f39c12;
+    --purple: #9b59b6;
+    --gray: #8899aa;
+    --light: #e8e8e8;
+    --white: #ffffff;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--dark);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--card) 0%, var(--card2) 100%);
+    padding: 24px 40px;
+    border-bottom: 3px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header h1 { font-size: 28px; color: var(--accent); letter-spacing: 2px; }
+  .header .subtitle { color: var(--gray); font-size: 14px; }
+
+  .container { max-width: 1440px; margin: 0 auto; padding: 24px; }
+
+  .grid-top {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .card-title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  .input-group { margin-bottom: 18px; }
+  .input-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--gray);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .input-group .value-display {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  .input-group input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--card2);
+    outline: none;
+  }
+  .input-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 3px solid var(--white);
+    box-shadow: 0 2px 8px rgba(0,180,216,0.4);
+  }
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--gray);
+    margin-top: 2px;
+  }
+
+  .funnel-section { display: flex; flex-direction: column; gap: 12px; }
+
+  .funnel-step {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: var(--card2);
+    position: relative;
+    transition: all 0.3s;
+  }
+  .funnel-step:hover { transform: translateX(4px); }
+
+  .funnel-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .funnel-info { flex: 1; }
+  .funnel-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); }
+  .funnel-value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+  .funnel-sub { font-size: 12px; color: var(--gray); margin-top: 2px; }
+  .funnel-pct {
+    font-size: 14px; font-weight: 600; padding: 4px 12px;
+    border-radius: 20px; flex-shrink: 0;
+  }
+
+  .funnel-arrow {
+    text-align: center;
+    font-size: 18px;
+    color: var(--gray);
+    margin: -4px 0;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: transform 0.2s;
+  }
+  .kpi:hover { transform: translateY(-3px); }
+  .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); margin-bottom: 8px; }
+  .kpi-value { font-size: 28px; font-weight: 800; }
+  .kpi-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+
+  .matrix-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  table.matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.matrix th {
+    background: var(--card2);
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  table.matrix td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    font-weight: 500;
+  }
+  table.matrix tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  table.matrix td.highlight { background: rgba(46,204,113,0.15); color: var(--green); font-weight: 700; }
+  table.matrix td.warn { background: rgba(243,156,18,0.15); color: var(--orange); }
+  table.matrix td.danger { background: rgba(231,76,60,0.15); color: var(--red); }
+  table.matrix td.label-cell { text-align: left; color: var(--gray); font-weight: 400; }
+  table.matrix td.row-header { text-align: left; font-weight: 600; color: var(--white); background: var(--card2); }
+
+  .scenarios { margin-bottom: 24px; }
+  .scenario-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .scenario-label { width: 120px; font-size: 12px; color: var(--gray); text-align: right; flex-shrink: 0; }
+  .scenario-bar-bg {
+    flex: 1;
+    height: 32px;
+    background: var(--card2);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .scenario-bar {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--white);
+    transition: width 0.5s ease;
+    min-width: 50px;
+  }
+  .scenario-val { width: 100px; font-size: 14px; font-weight: 700; text-align: right; flex-shrink: 0; }
+
+  .waterfall {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 280px;
+    padding: 0 20px 40px;
+    position: relative;
+  }
+  .waterfall::before {
+    content: '';
+    position: absolute;
+    bottom: 38px;
+    left: 20px; right: 20px;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+  }
+  .wf-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .wf-bar {
+    width: 80%;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    min-height: 20px;
+    transition: height 0.5s ease;
+  }
+  .wf-label {
+    position: absolute;
+    bottom: -32px;
+    font-size: 10px;
+    color: var(--gray);
+    text-align: center;
+    width: 100%;
+    text-transform: uppercase;
+  }
+
+  .profit-zone {
+    background: linear-gradient(135deg, rgba(46,204,113,0.1), rgba(212,165,55,0.1));
+    border: 2px solid var(--gold);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .profit-zone .big { font-size: 48px; font-weight: 900; color: var(--gold); }
+  .profit-zone .med { font-size: 22px; color: var(--green); margin-top: 8px; }
+  .profit-zone .small { font-size: 14px; color: var(--gray); margin-top: 4px; }
+
+  .stress-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .stress-card {
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .stress-card:hover { transform: scale(1.03); }
+  .stress-price { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+  .stress-profit { font-size: 20px; font-weight: 800; }
+  .stress-each { font-size: 11px; margin-top: 4px; }
+
+  .ref-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .preset-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+  }
+  .preset-btn:hover, .preset-btn.active {
+    background: var(--accent);
+    color: var(--dark);
+  }
+
+  .disclaimer {
+    text-align: center;
+    color: var(--gray);
+    font-size: 11px;
+    padding: 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    margin-top: 24px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* === CIAN DATA SECTION === */
+  .cian-upload-zone {
+    border: 2px dashed var(--accent);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .cian-upload-zone:hover, .cian-upload-zone.dragover {
+    background: rgba(0,180,216,0.08);
+    border-color: var(--gold);
+  }
+  .cian-upload-zone.loaded {
+    border-color: var(--green);
+    background: rgba(46,204,113,0.05);
+  }
+  .cian-upload-icon { font-size: 40px; margin-bottom: 12px; }
+  .cian-upload-text { font-size: 16px; font-weight: 600; color: var(--accent); }
+  .cian-upload-sub { font-size: 12px; color: var(--gray); margin-top: 6px; }
+  .cian-upload-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  }
+
+  .cian-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    border-radius: 12px;
+    background: var(--card2);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .cian-status-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .cian-status-text { font-size: 14px; flex: 1; }
+  .cian-status-meta { font-size: 11px; color: var(--gray); }
+
+  .cian-market-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .cian-mcard {
+    background: var(--card2);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .cian-mcard-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); margin-bottom: 6px; }
+  .cian-mcard-value { font-size: 22px; font-weight: 800; }
+  .cian-mcard-sub { font-size: 11px; color: var(--gray); margin-top: 4px; }
+
+  /* Listings table */
+  .listings-controls {
+    display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;
+  }
+  .listings-controls input, .listings-controls select {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: var(--card2);
+    color: var(--white);
+    font-size: 13px;
+    outline: none;
+  }
+  .listings-controls input:focus, .listings-controls select:focus {
+    border-color: var(--accent);
+  }
+  .listings-controls input::placeholder { color: var(--gray); }
+
+  table.listings {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.listings th {
+    background: var(--card2);
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    border-bottom: 2px solid rgba(0,180,216,0.3);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  table.listings th:hover { color: var(--gold); }
+  table.listings th .sort-arrow { margin-left: 4px; font-size: 9px; }
+  table.listings td {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    white-space: nowrap;
+  }
+  table.listings tr:hover td { background: rgba(0,180,216,0.04); }
+  table.listings a { color: var(--accent); text-decoration: none; }
+  table.listings a:hover { text-decoration: underline; }
+  .listings-count { font-size: 12px; color: var(--gray); }
+
+  .flip-verdict {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .flip-verdict.good { background: rgba(46,204,113,0.2); color: var(--green); }
+  .flip-verdict.ok { background: rgba(243,156,18,0.2); color: var(--orange); }
+  .flip-verdict.bad { background: rgba(231,76,60,0.2); color: var(--red); }
+
+  @media (max-width: 900px) {
+    .grid-top { grid-template-columns: 1fr; }
+    .matrix-section { grid-template-columns: 1fr; }
+    .ref-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>FLIP PROJECT</h1>
+    <div class="subtitle">Финансовая модель + данные ЦИАН в реальном времени | Москва 2026</div>
+  </div>
+  <div style="text-align:right">
+    <div style="color:var(--gold);font-size:13px;font-weight:600;">Плечо сделки: 2 месяца</div>
+    <div style="color:var(--gray);font-size:11px;">от выкупа до получения денег</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- CIAN DATA UPLOAD -->
+  <div class="section-title">Данные ЦИАН (реальный рынок)</div>
+
+  <div class="cian-upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept=".json,.csv">
+    <div class="cian-upload-icon" id="upload-icon">📂</div>
+    <div class="cian-upload-text" id="upload-text">Загрузите файл cian_data.json или CSV</div>
+    <div class="cian-upload-sub" id="upload-sub">Перетащите файл сюда или нажмите для выбора<br>
+      <span style="color:var(--accent)">Команда: python3 cian_scraper.py --rooms 2 --pages 3</span>
+    </div>
+  </div>
+
+  <div class="cian-status" id="cian-status" style="display:none">
+    <div class="cian-status-dot" id="status-dot" style="background:var(--green)"></div>
+    <div class="cian-status-text" id="status-text">Данные загружены</div>
+    <div class="cian-status-meta" id="status-meta"></div>
+    <button onclick="applyCianToCalc()" style="padding:6px 16px;border-radius:8px;border:1px solid var(--green);background:rgba(46,204,113,0.15);color:var(--green);font-size:12px;font-weight:600;cursor:pointer">
+      Применить к калькулятору
+    </button>
+  </div>
+
+  <!-- CIAN Market overview -->
+  <div id="cian-market-section" style="display:none">
+    <div class="cian-market-cards" id="cian-market-cards"></div>
+  </div>
+
+  <!-- CIAN Listings table -->
+  <div id="cian-listings-section" class="card" style="display:none;margin-bottom:24px">
+    <div class="card-title">Объявления ЦИАН <span class="listings-count" id="listings-count"></span></div>
+    <div class="listings-controls">
+      <input type="text" id="filter-search" placeholder="Поиск по адресу, метро, ЖК..." oninput="renderListings()">
+      <select id="filter-rooms" onchange="renderListings()">
+        <option value="">Все комнаты</option>
+        <option value="0">Студия</option>
+        <option value="1">1-комн</option>
+        <option value="2">2-комн</option>
+        <option value="3">3-комн</option>
+      </select>
+      <select id="filter-sort" onchange="renderListings()">
+        <option value="price_asc">Цена ↑</option>
+        <option value="price_desc">Цена ↓</option>
+        <option value="pm2_asc">₽/м² ↑</option>
+        <option value="pm2_desc">₽/м² ↓</option>
+        <option value="meters_desc">Площадь ↓</option>
+        <option value="meters_asc">Площадь ↑</option>
+      </select>
+      <label style="font-size:12px;color:var(--gray);display:flex;align-items:center;gap:6px">
+        <input type="checkbox" id="filter-flip" onchange="renderListings()"> Показать FLIP-расчёт
+      </label>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="listings" id="listings-table">
+        <thead id="listings-thead"></thead>
+        <tbody id="listings-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Presets -->
+  <div style="margin-bottom:24px">
+    <div class="section-title" style="margin-bottom:12px">Калькулятор FLIP-сделки</div>
+    <div class="presets">
+      <button class="preset-btn active" onclick="setPreset(30, 12, 2.5)">Студия 30 м²</button>
+      <button class="preset-btn" onclick="setPreset(40, 14, 2.5)">1-комн 40 м²</button>
+      <button class="preset-btn" onclick="setPreset(49, 15.3, 2.5)">2-комн 49 м² (пилот)</button>
+      <button class="preset-btn" onclick="setPreset(60, 18, 3.0)">2-комн 60 м²</button>
+      <button class="preset-btn" onclick="setPreset(75, 22, 3.5)">3-комн 75 м²</button>
+      <button class="preset-btn" onclick="setPreset(90, 26, 4.0)">3-комн 90 м²</button>
+    </div>
+  </div>
+
+  <div class="grid-top">
+    <div class="card">
+      <div class="card-title">Параметры сделки</div>
+
+      <div class="input-group">
+        <label>Площадь квартиры (м²)</label>
+        <div class="value-display" id="val-area">49 м²</div>
+        <input type="range" id="sl-area" min="20" max="120" step="1" value="49" oninput="calc()">
+        <div class="range-labels"><span>20</span><span>70</span><span>120</span></div>
+      </div>
+
+      <div class="input-group">
+        <label>Цена покупки на торгах (млн ₽)</label>
+        <div class="value-display" id="val-buy">15.3 млн ₽</div>
+        <input type="range" id="sl-buy" min="3" max="45" step="0.1" value="15.3" oninput="calc()">
+        <div class="range-labels"><span>3 млн</span><span>24 млн</span><span>45 млн</span></div>
+      </div>
+
+      <div class="input-group">
+        <label>Ремонт + материалы + мебель + техника (млн ₽)</label>
+        <div class="value-display" id="val-reno">2.5 млн ₽</div>
+        <input type="range" id="sl-reno" min="0.5" max="8" step="0.1" value="2.5" oninput="calc()">
+        <div class="range-labels"><span>0.5</span><span>4</span><span>8 млн</span></div>
+      </div>
+
+      <div class="input-group">
+        <label>Дисконт покупки от рынка (%)</label>
+        <div class="value-display" id="val-disc" style="color:var(--green)">−25%</div>
+        <input type="range" id="sl-disc" min="10" max="40" step="1" value="25" oninput="calc()">
+        <div class="range-labels"><span>−10%</span><span>−25%</span><span>−40%</span></div>
+      </div>
+
+      <div class="input-group">
+        <label>Дисконт продажи от рынка (быстрая продажа, %)</label>
+        <div class="value-display" id="val-sell-disc" style="color:var(--orange)">−5%</div>
+        <input type="range" id="sl-sell-disc" min="0" max="15" step="1" value="5" oninput="calc()">
+        <div class="range-labels"><span>0%</span><span>−7%</span><span>−15%</span></div>
+      </div>
+
+      <div class="input-group">
+        <label>Налоговая ставка УСН (%)</label>
+        <div class="value-display" id="val-tax">5%</div>
+        <input type="range" id="sl-tax" min="1" max="15" step="0.5" value="5" oninput="calc()">
+        <div class="range-labels"><span>1%</span><span>5%</span><span>15%</span></div>
+      </div>
+
+      <div class="input-group">
+        <label>Доля расходов к вычету (%)</label>
+        <div class="value-display" id="val-deduct">85%</div>
+        <input type="range" id="sl-deduct" min="50" max="100" step="1" value="85" oninput="calc()">
+        <div class="range-labels"><span>50%</span><span>85%</span><span>100%</span></div>
+      </div>
+
+      <!-- CIAN data indicator -->
+      <div id="cian-indicator" style="display:none;margin-top:16px;padding:12px;border-radius:10px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:4px">Данные ЦИАН</div>
+        <div style="font-size:13px;color:var(--white)" id="cian-ind-text">Средняя: 376 т/м²</div>
+      </div>
+    </div>
+
+    <!-- Funnel -->
+    <div class="card">
+      <div class="card-title">Воронка сделки</div>
+      <div class="funnel-section">
+        <div class="funnel-step">
+          <div class="funnel-icon" style="background:rgba(0,180,216,0.15);color:var(--accent)">🏠</div>
+          <div class="funnel-info">
+            <div class="funnel-label">Рыночная стоимость (без ремонта)</div>
+            <div class="funnel-value" id="f-market" style="color:var(--accent)">20.4 млн ₽</div>
+            <div class="funnel-sub" id="f-market-sub">417 т/м²</div>
+          </div>
+        </div>
+        <div class="funnel-arrow">▼ <span id="f-disc-pct" style="color:var(--green)">скидка −25%</span></div>
+
+        <div class="funnel-step">
+          <div class="funnel-icon" style="background:rgba(46,204,113,0.15);color:var(--green)">⚡</div>
+          <div class="funnel-info">
+            <div class="funnel-label">Цена покупки на торгах</div>
+            <div class="funnel-value" id="f-buy" style="color:var(--green)">15.3 млн ₽</div>
+            <div class="funnel-sub" id="f-buy-sub">313 т/м²</div>
+          </div>
+          <div class="funnel-pct" id="f-buy-save" style="background:rgba(46,204,113,0.15);color:var(--green)">−5.1 млн</div>
+        </div>
+        <div class="funnel-arrow">▼ <span style="color:var(--orange)">+ ремонт</span></div>
+
+        <div class="funnel-step">
+          <div class="funnel-icon" style="background:rgba(243,156,18,0.15);color:var(--orange)">🔧</div>
+          <div class="funnel-info">
+            <div class="funnel-label">Ремонт + материалы + мебель + техника</div>
+            <div class="funnel-value" id="f-reno" style="color:var(--orange)">2.5 млн ₽</div>
+            <div class="funnel-sub" id="f-reno-sub">51 т/м²</div>
+          </div>
+        </div>
+        <div class="funnel-arrow">▼ <span style="color:var(--white)">итого вложения</span></div>
+
+        <div class="funnel-step" style="border:1px solid var(--accent)">
+          <div class="funnel-icon" style="background:rgba(0,180,216,0.2);color:var(--accent)">📊</div>
+          <div class="funnel-info">
+            <div class="funnel-label">Полная себестоимость</div>
+            <div class="funnel-value" id="f-total" style="color:var(--white)">17.8 млн ₽</div>
+            <div class="funnel-sub" id="f-total-sub">364 т/м²</div>
+          </div>
+        </div>
+        <div class="funnel-arrow">▼ <span style="color:var(--gold)">продажа</span></div>
+
+        <div class="funnel-step">
+          <div class="funnel-icon" style="background:rgba(155,89,182,0.15);color:var(--purple)">🏷️</div>
+          <div class="funnel-info">
+            <div class="funnel-label">Рыночная стоимость (с ремонтом)</div>
+            <div class="funnel-value" id="f-market-reno" style="color:var(--purple)">24.0 млн ₽</div>
+            <div class="funnel-sub" id="f-market-reno-sub">490 т/м²</div>
+          </div>
+        </div>
+        <div class="funnel-arrow">▼ <span id="f-sell-disc-text" style="color:var(--orange)">быстрая продажа −5%</span></div>
+
+        <div class="funnel-step" style="border:2px solid var(--gold);background:rgba(212,165,55,0.08)">
+          <div class="funnel-icon" style="background:rgba(212,165,55,0.2);color:var(--gold)">💰</div>
+          <div class="funnel-info">
+            <div class="funnel-label">Цена продажи</div>
+            <div class="funnel-value" id="f-sell" style="color:var(--gold)">22.8 млн ₽</div>
+            <div class="funnel-sub" id="f-sell-sub">466 т/м²</div>
+          </div>
+          <div class="funnel-pct" id="f-margin-badge" style="background:rgba(212,165,55,0.2);color:var(--gold)">+5.0 млн</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Валовая прибыль</div><div class="kpi-value" id="kpi-gross" style="color:var(--green)">5.0 млн</div><div class="kpi-sub" id="kpi-gross-sub">на сделку</div></div>
+    <div class="kpi"><div class="kpi-label">Налог УСН</div><div class="kpi-value" id="kpi-tax" style="color:var(--red)">−200 т</div><div class="kpi-sub" id="kpi-tax-sub">5% с базы</div></div>
+    <div class="kpi"><div class="kpi-label">Чистая прибыль</div><div class="kpi-value" id="kpi-net" style="color:var(--gold)">4.8 млн</div><div class="kpi-sub" id="kpi-net-sub">за 2 месяца</div></div>
+    <div class="kpi"><div class="kpi-label">На каждого (50/50)</div><div class="kpi-value" id="kpi-each" style="color:var(--accent)">2.4 млн</div><div class="kpi-sub">за 2 месяца</div></div>
+    <div class="kpi"><div class="kpi-label">ROI на сделку</div><div class="kpi-value" id="kpi-roi" style="color:var(--green)">27%</div><div class="kpi-sub">на вложенный капитал</div></div>
+    <div class="kpi"><div class="kpi-label">Годовая доходность</div><div class="kpi-value" id="kpi-annual" style="color:var(--gold)">162%</div><div class="kpi-sub" id="kpi-annual-sub">при 6 сделках/год</div></div>
+  </div>
+
+  <!-- Profit zone -->
+  <div class="profit-zone" id="profit-zone">
+    <div style="font-size:14px;color:var(--gray);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Чистая прибыль на сделку</div>
+    <div class="big" id="pz-profit">3 000 000 ₽</div>
+    <div class="med" id="pz-each">По 1 500 000 ₽ каждому партнёру</div>
+    <div class="small" id="pz-roi">ROI 16.9% за 2 месяца → ~101% годовых (6 сделок)</div>
+  </div>
+
+  <!-- Waterfall -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Водопад прибыли (структура сделки)</div>
+    <div class="waterfall" id="waterfall"></div>
+  </div>
+
+  <!-- Stress test -->
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Стресс-тест: продажа по разным ценам</div>
+    <div class="stress-grid" id="stress-grid"></div>
+  </div>
+
+  <!-- Scenarios -->
+  <div class="card scenarios" style="margin-bottom:24px">
+    <div class="card-title">Сценарии: годовая прибыль на партнёра</div>
+    <div id="scenarios"></div>
+  </div>
+
+  <!-- Reference Tables -->
+  <div class="section-title">Справочные таблицы: зоны выгодной покупки</div>
+  <div class="matrix-section">
+    <div class="card">
+      <div class="card-title">Максимальная цена покупки (млн ₽) для прибыли ≥ 1.5 млн каждому</div>
+      <table class="matrix" id="tbl-buy"></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Чистая прибыль на партнёра (млн ₽) при разных площадях</div>
+      <table class="matrix" id="tbl-profit"></table>
+    </div>
+  </div>
+
+  <div class="section-title">Справка: стоимость ремонта за м² (Москва 2026)</div>
+  <div class="ref-grid">
+    <div class="card">
+      <div class="card-title">Стоимость ремонта по классам</div>
+      <table class="matrix">
+        <tr><th>Класс</th><th>Работы, т/м²</th><th>Материалы, т/м²</th><th>Итого, т/м²</th></tr>
+        <tr><td class="row-header">Эконом</td><td>6–8</td><td>12–15</td><td>18–23</td></tr>
+        <tr><td class="row-header">Комфорт</td><td>8–12</td><td>18–25</td><td>26–37</td></tr>
+        <tr><td class="row-header">Комфорт+ (наш)</td><td>10–15</td><td>22–30</td><td class="highlight">32–45</td></tr>
+        <tr><td class="row-header">Бизнес</td><td>15–25</td><td>30–50</td><td>45–75</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title" id="ref-market-title">Средняя цена м² вторичный рынок Москва</div>
+      <table class="matrix" id="ref-market-table">
+        <tr><th>Сегмент</th><th>Без ремонта, т/м²</th><th>С ремонтом, т/м²</th><th>Прирост</th></tr>
+        <tr><td class="row-header">Эконом</td><td>250–320</td><td>300–380</td><td>+20%</td></tr>
+        <tr><td class="row-header">Комфорт</td><td>320–420</td><td>400–500</td><td class="highlight">+25%</td></tr>
+        <tr><td class="row-header">Бизнес</td><td>450–650</td><td>550–800</td><td>+22%</td></tr>
+        <tr><td class="row-header">Премиум</td><td>700–1200</td><td>900–1500</td><td>+25%</td></tr>
+      </table>
+      <div style="margin-top:8px;font-size:11px;color:var(--gray)" id="ref-market-note">Средняя цена март 2026: ~420 т/м² (вторичка Москва)</div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    FLIP PROJECT — финансовая модель | Все расчёты являются прогнозными | Данные по рынку: Москва, март 2026<br>
+    Средняя цена м² вторичка: ~420 000 ₽ | Ремонт комфорт+: 32–45 т/м² | Налог: ИП УСН «Доходы − Расходы» 5%
+  </div>
+</div>
+
+<script>
+let MARKET_PM2 = 417000;
+let MARKET_PM2_RENO = 490000;
+let cianData = null;
+let cianListings = [];
+
+// === FILE UPLOAD ===
+const uploadZone = document.getElementById('upload-zone');
+const fileInput = document.getElementById('file-input');
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    if (file.name.endsWith('.json')) {
+      loadJSON(JSON.parse(text));
+    } else if (file.name.endsWith('.csv')) {
+      loadCSV(text);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function loadJSON(data) {
+  cianData = data;
+  cianListings = data.listings || [];
+  if (data.market) {
+    MARKET_PM2 = data.market.avg_price_m2;
+    MARKET_PM2_RENO = data.market.price_m2_with_reno;
+  }
+  showCianUI();
+  calc();
+}
+
+function loadCSV(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return;
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^\uFEFF/, ''));
+  const listings = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(',');
+    if (vals.length < headers.length) continue;
+    const obj = {};
+    headers.forEach((h, idx) => obj[h] = vals[idx]?.trim() || '');
+    const price = parseInt(obj.price) || 0;
+    const meters = parseFloat(obj.total_meters) || 0;
+    if (price > 0 && meters > 0) {
+      listings.push({
+        price: price,
+        price_m2: parseInt(obj.price_m2) || Math.round(price / meters),
+        rooms: parseInt(obj.rooms_count) || 0,
+        meters: meters,
+        floor: parseInt(obj.floor) || 0,
+        floors_count: parseInt(obj.floors_count) || 0,
+        district: obj.district || '',
+        metro: obj.metro || '',
+        metro_time: obj.metro_time || '',
+        street: obj.street || '',
+        house: obj.house_number || '',
+        jk: obj.residential_complex || '',
+        author: obj.author_type || '',
+        url: obj.url || '',
+      });
+    }
+  }
+  cianListings = listings;
+  const pm2s = listings.map(l => l.price / l.meters).filter(v => v > 0);
+  const avgPm2 = pm2s.length ? Math.round(pm2s.reduce((a, b) => a + b, 0) / pm2s.length) : MARKET_PM2;
+  cianData = {
+    meta: { date: new Date().toLocaleString('ru-RU'), source: 'CSV', total_listings: listings.length, location: 'Москва' },
+    market: {
+      avg_price: Math.round(listings.reduce((a, l) => a + l.price, 0) / listings.length),
+      med_price: listings.map(l => l.price).sort((a, b) => a - b)[Math.floor(listings.length / 2)],
+      min_price: Math.min(...listings.map(l => l.price)),
+      max_price: Math.max(...listings.map(l => l.price)),
+      avg_meters: Math.round(listings.reduce((a, l) => a + l.meters, 0) / listings.length * 10) / 10,
+      avg_price_m2: avgPm2,
+      med_price_m2: pm2s.sort((a, b) => a - b)[Math.floor(pm2s.length / 2)] || avgPm2,
+      price_m2_with_reno: Math.round(avgPm2 * 1.22),
+    },
+    listings: listings,
+  };
+  MARKET_PM2 = avgPm2;
+  MARKET_PM2_RENO = Math.round(avgPm2 * 1.22);
+  showCianUI();
+  calc();
+}
+
+function showCianUI() {
+  uploadZone.classList.add('loaded');
+  document.getElementById('upload-icon').textContent = '✅';
+  document.getElementById('upload-text').textContent = 'Данные загружены';
+  document.getElementById('upload-sub').textContent = `${cianListings.length} объявлений | Нажмите для обновления`;
+
+  const st = document.getElementById('cian-status');
+  st.style.display = 'flex';
+  document.getElementById('status-text').textContent =
+    `${cianListings.length} объявлений | Средняя ${fmtK(MARKET_PM2)} т/м² | С ремонтом ~${fmtK(MARKET_PM2_RENO)} т/м²`;
+  document.getElementById('status-meta').textContent =
+    cianData.meta ? `${cianData.meta.date} | ${cianData.meta.source}` : '';
+
+  buildMarketCards();
+  renderListings();
+
+  document.getElementById('cian-market-section').style.display = '';
+  document.getElementById('cian-listings-section').style.display = '';
+
+  const ind = document.getElementById('cian-indicator');
+  ind.style.display = '';
+  document.getElementById('cian-ind-text').textContent =
+    `ЦИАН: ${fmtK(MARKET_PM2)} т/м² без рем. | ${fmtK(MARKET_PM2_RENO)} т/м² с рем.`;
+
+  document.getElementById('ref-market-note').textContent =
+    `Данные ЦИАН (${cianData.meta?.date || 'загружено'}): средняя ${fmtK(MARKET_PM2)} т/м²`;
+}
+
+function buildMarketCards() {
+  const m = cianData.market;
+  const cards = [
+    { label: 'Объявлений', value: cianListings.length, color: 'var(--accent)' },
+    { label: 'Средняя цена', value: fmtM(m.avg_price), sub: 'по выборке', color: 'var(--white)' },
+    { label: 'Медианная цена', value: fmtM(m.med_price), color: 'var(--white)' },
+    { label: 'Средняя ₽/м²', value: fmtK(m.avg_price_m2) + ' т', sub: 'без ремонта', color: 'var(--accent)' },
+    { label: 'Медианная ₽/м²', value: fmtK(m.med_price_m2) + ' т', color: 'var(--accent)' },
+    { label: '₽/м² с ремонтом', value: fmtK(m.price_m2_with_reno) + ' т', sub: '+22% к базе', color: 'var(--green)' },
+    { label: 'Средняя площадь', value: m.avg_meters + ' м²', color: 'var(--white)' },
+    { label: 'Диапазон цен', value: fmtM(m.min_price) + ' – ' + fmtM(m.max_price), color: 'var(--gray)', small: true },
+  ];
+  let html = '';
+  cards.forEach(c => {
+    const fs = c.small ? 'font-size:14px' : '';
+    html += `<div class="cian-mcard">
+      <div class="cian-mcard-label">${c.label}</div>
+      <div class="cian-mcard-value" style="color:${c.color};${fs}">${c.value}</div>
+      ${c.sub ? `<div class="cian-mcard-sub">${c.sub}</div>` : ''}
+    </div>`;
+  });
+  document.getElementById('cian-market-cards').innerHTML = html;
+}
+
+function renderListings() {
+  if (!cianListings.length) return;
+  const search = document.getElementById('filter-search').value.toLowerCase();
+  const rooms = document.getElementById('filter-rooms').value;
+  const sort = document.getElementById('filter-sort').value;
+  const showFlip = document.getElementById('filter-flip').checked;
+
+  let filtered = cianListings.filter(l => {
+    if (rooms !== '' && String(l.rooms) !== rooms) return false;
+    if (search) {
+      const hay = `${l.street} ${l.house} ${l.metro} ${l.district} ${l.jk}`.toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  const [field, dir] = sort.split('_');
+  const keyMap = { price: 'price', pm2: 'price_m2', meters: 'meters' };
+  const key = keyMap[field] || 'price';
+  filtered.sort((a, b) => dir === 'asc' ? a[key] - b[key] : b[key] - a[key]);
+
+  document.getElementById('listings-count').textContent = `(${filtered.length} из ${cianListings.length})`;
+
+  let thead = '<tr><th>Цена</th><th>₽/м²</th><th>Комн.</th><th>Площадь</th><th>Этаж</th><th>Район/Метро</th><th>Адрес</th><th>Тип</th>';
+  if (showFlip) thead += '<th>FLIP прибыль</th><th>Вердикт</th>';
+  thead += '<th>Ссылка</th></tr>';
+  document.getElementById('listings-thead').innerHTML = thead;
+
+  const auctionDiscount = +document.getElementById('sl-disc').value / 100;
+  const sellDiscount = +document.getElementById('sl-sell-disc').value / 100;
+  const taxRate = +document.getElementById('sl-tax').value / 100;
+  const deductPct = +document.getElementById('sl-deduct').value / 100;
+
+  let tbody = '';
+  filtered.slice(0, 100).forEach(l => {
+    const r = l.rooms === 0 ? 'ст.' : l.rooms + '-к';
+    const loc = [l.district, l.metro ? 'м.' + l.metro : ''].filter(Boolean).join(' / ');
+    const addr = `${l.street} ${l.house}`.trim();
+
+    tbody += `<tr>
+      <td style="font-weight:700">${fmtM(l.price)}</td>
+      <td>${fmtK(l.price_m2)} т</td>
+      <td>${r}</td>
+      <td>${l.meters} м²</td>
+      <td>${l.floor}/${l.floors_count}</td>
+      <td>${loc}</td>
+      <td>${addr}</td>
+      <td style="font-size:10px;color:var(--gray)">${l.author}</td>`;
+
+    if (showFlip) {
+      const auctionPrice = l.price * (1 - auctionDiscount);
+      const renoCost = l.meters * 45000;
+      const totalInvest = auctionPrice + renoCost;
+      const marketReno = l.price * 1.22;
+      const sellPrice = marketReno * (1 - sellDiscount);
+      const gross = sellPrice - totalInvest;
+      const deductible = auctionPrice + renoCost * deductPct;
+      const taxBase = Math.max(0, sellPrice - deductible);
+      const tax = taxBase * taxRate;
+      const net = gross - tax;
+      const each = net / 2;
+
+      let cls = 'bad', label = 'Убыток';
+      if (each >= 1500000) { cls = 'good'; label = 'Выгодно'; }
+      else if (each >= 500000) { cls = 'ok'; label = 'Норм'; }
+      else if (each > 0) { cls = 'ok'; label = 'Мало'; }
+
+      tbody += `<td style="font-weight:700;color:${each > 0 ? 'var(--green)' : 'var(--red)'}">${fmtK(each)} т</td>`;
+      tbody += `<td><span class="flip-verdict ${cls}">${label}</span></td>`;
+    }
+
+    const shortUrl = l.url ? l.url.replace('https://www.cian.ru/', '') : '';
+    tbody += `<td><a href="${l.url}" target="_blank">${shortUrl.substring(0, 20)}</a></td></tr>`;
+  });
+
+  document.getElementById('listings-tbody').innerHTML = tbody;
+}
+
+function applyCianToCalc() {
+  if (!cianData) return;
+  calc();
+  window.scrollTo({ top: document.querySelector('.grid-top').offsetTop - 20, behavior: 'smooth' });
+}
+
+// === CALCULATOR ===
+function fmtK(n) { return Math.round(n / 1000); }
+function fmt(n) {
+  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1).replace('.0', '') + ' млн';
+  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(0) + ' т';
+  return n.toFixed(0);
+}
+function fmtFull(n) { return n.toLocaleString('ru-RU').replace(/\s/g, ' ') + ' ₽'; }
+function fmtM(n) { return (n / 1e6).toFixed(1) + ' млн ₽'; }
+
+function setPreset(area, buy, reno) {
+  document.getElementById('sl-area').value = area;
+  document.getElementById('sl-buy').value = buy;
+  document.getElementById('sl-reno').value = reno;
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  calc();
+}
+
+function calc() {
+  const area = +document.getElementById('sl-area').value;
+  const buyPrice = +document.getElementById('sl-buy').value * 1e6;
+  const renoPrice = +document.getElementById('sl-reno').value * 1e6;
+  const discount = +document.getElementById('sl-disc').value;
+  const sellDiscount = +document.getElementById('sl-sell-disc').value;
+  const taxRate = +document.getElementById('sl-tax').value / 100;
+  const deductPct = +document.getElementById('sl-deduct').value / 100;
+
+  const marketNoReno = buyPrice / (1 - discount / 100);
+  const pricePerSqmNoReno = marketNoReno / area;
+
+  const renoMultiplier = MARKET_PM2_RENO / MARKET_PM2;
+  const pricePerSqmWithReno = pricePerSqmNoReno * renoMultiplier;
+  const marketWithReno = pricePerSqmWithReno * area;
+
+  const sellPrice = marketWithReno * (1 - sellDiscount / 100);
+  const totalInvest = buyPrice + renoPrice;
+  const grossProfit = sellPrice - totalInvest;
+
+  const deductibleExpenses = buyPrice + renoPrice * deductPct;
+  const taxBase = Math.max(0, sellPrice - deductibleExpenses);
+  const tax = taxBase * taxRate;
+  const netProfit = grossProfit - tax;
+  const each = netProfit / 2;
+
+  const roi = totalInvest > 0 ? (netProfit / totalInvest) * 100 : 0;
+  const annualRoi = roi * 6;
+
+  document.getElementById('val-area').textContent = area + ' м²';
+  document.getElementById('val-buy').textContent = fmtM(buyPrice);
+  document.getElementById('val-reno').textContent = fmtM(renoPrice);
+  document.getElementById('val-disc').textContent = '−' + discount + '%';
+  document.getElementById('val-sell-disc').textContent = sellDiscount === 0 ? 'по рынку' : '−' + sellDiscount + '%';
+  document.getElementById('val-tax').textContent = (taxRate * 100) + '%';
+  document.getElementById('val-deduct').textContent = (deductPct * 100).toFixed(0) + '%';
+
+  document.getElementById('f-market').textContent = fmtM(marketNoReno);
+  document.getElementById('f-market-sub').textContent = fmtK(pricePerSqmNoReno) + ' т/м²' + (cianData ? ' (ЦИАН)' : '');
+  document.getElementById('f-disc-pct').textContent = 'скидка −' + discount + '%';
+  document.getElementById('f-buy').textContent = fmtM(buyPrice);
+  document.getElementById('f-buy-sub').textContent = fmtK(buyPrice / area) + ' т/м²';
+  document.getElementById('f-buy-save').textContent = '−' + fmt(marketNoReno - buyPrice);
+  document.getElementById('f-reno').textContent = fmtM(renoPrice);
+  document.getElementById('f-reno-sub').textContent = fmtK(renoPrice / area) + ' т/м²';
+  document.getElementById('f-total').textContent = fmtM(totalInvest);
+  document.getElementById('f-total-sub').textContent = fmtK(totalInvest / area) + ' т/м²';
+  document.getElementById('f-market-reno').textContent = fmtM(marketWithReno);
+  document.getElementById('f-market-reno-sub').textContent = fmtK(pricePerSqmWithReno) + ' т/м²';
+  document.getElementById('f-sell-disc-text').textContent = sellDiscount === 0 ? 'по рыночной цене' : 'быстрая продажа −' + sellDiscount + '%';
+  document.getElementById('f-sell').textContent = fmtM(sellPrice);
+  document.getElementById('f-sell-sub').textContent = fmtK(sellPrice / area) + ' т/м² — ' + (sellDiscount >= 3 ? 'привлекательно, уходит быстро' : 'рыночная цена');
+  document.getElementById('f-margin-badge').textContent = (grossProfit >= 0 ? '+' : '') + fmt(grossProfit);
+  document.getElementById('f-margin-badge').style.color = grossProfit > 0 ? 'var(--gold)' : 'var(--red)';
+
+  document.getElementById('kpi-gross').textContent = fmt(grossProfit);
+  document.getElementById('kpi-gross').style.color = grossProfit > 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('kpi-tax').textContent = '−' + fmt(tax);
+  document.getElementById('kpi-tax-sub').textContent = (taxRate * 100) + '% с базы ' + fmt(taxBase);
+  document.getElementById('kpi-net').textContent = fmt(netProfit);
+  document.getElementById('kpi-net').style.color = netProfit > 0 ? 'var(--gold)' : 'var(--red)';
+  document.getElementById('kpi-each').textContent = fmt(each);
+  document.getElementById('kpi-each').style.color = each > 0 ? 'var(--accent)' : 'var(--red)';
+  document.getElementById('kpi-roi').textContent = roi.toFixed(1) + '%';
+  document.getElementById('kpi-roi').style.color = roi > 10 ? 'var(--green)' : roi > 0 ? 'var(--orange)' : 'var(--red)';
+  document.getElementById('kpi-annual').textContent = annualRoi.toFixed(0) + '%';
+  document.getElementById('kpi-annual').style.color = annualRoi > 50 ? 'var(--gold)' : annualRoi > 0 ? 'var(--orange)' : 'var(--red)';
+
+  document.getElementById('pz-profit').textContent = fmtFull(netProfit);
+  document.getElementById('pz-each').textContent = 'По ' + fmtFull(each) + ' каждому партнёру';
+  document.getElementById('pz-roi').textContent = 'ROI ' + roi.toFixed(1) + '% за 2 месяца → ~' + annualRoi.toFixed(0) + '% годовых (6 сделок)';
+
+  const pz = document.getElementById('profit-zone');
+  if (netProfit > 2e6) {
+    pz.style.borderColor = 'var(--gold)';
+    pz.style.background = 'linear-gradient(135deg, rgba(46,204,113,0.1), rgba(212,165,55,0.1))';
+  } else if (netProfit > 0) {
+    pz.style.borderColor = 'var(--orange)';
+    pz.style.background = 'linear-gradient(135deg, rgba(243,156,18,0.08), rgba(212,165,55,0.05))';
+  } else {
+    pz.style.borderColor = 'var(--red)';
+    pz.style.background = 'linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05))';
+  }
+
+  buildWaterfall(buyPrice, renoPrice, tax, sellPrice, netProfit);
+  buildStress(totalInvest, deductibleExpenses, taxRate, sellPrice);
+  buildScenarios(each);
+  buildTables(area, renoPrice, discount, sellDiscount, taxRate, deductPct);
+
+  if (cianListings.length && document.getElementById('filter-flip').checked) {
+    renderListings();
+  }
+}
+
+function buildWaterfall(buyPrice, renoPrice, tax, sellPrice, netProfit) {
+  const maxVal = sellPrice;
+  const h = 220;
+  const items = [
+    { label: 'Покупка', value: buyPrice, color: 'var(--accent)' },
+    { label: 'Ремонт', value: renoPrice, color: 'var(--orange)' },
+    { label: 'Налог', value: tax, color: 'var(--red)' },
+    { label: 'Продажа', value: sellPrice, color: 'var(--gold)' },
+    { label: 'Прибыль', value: netProfit, color: netProfit > 0 ? 'var(--green)' : 'var(--red)' },
+  ];
+  let html = '';
+  items.forEach(item => {
+    const barH = Math.max(20, (Math.abs(item.value) / maxVal) * h);
+    html += `<div class="wf-col"><div class="wf-bar" style="height:${barH}px;background:${item.color}">${fmt(item.value)}</div><div class="wf-label">${item.label}</div></div>`;
+  });
+  document.getElementById('waterfall').innerHTML = html;
+}
+
+function buildStress(totalInvest, deductibleExpenses, taxRate, baseSellPrice) {
+  const pcts = [-15, -10, -5, 0, 5, 10];
+  let html = '';
+  pcts.forEach(pct => {
+    const sp = baseSellPrice * (1 + pct / 100);
+    const gross = sp - totalInvest;
+    const taxBase = Math.max(0, sp - deductibleExpenses);
+    const tax = taxBase * taxRate;
+    const net = gross - tax;
+    const each = net / 2;
+    let bgColor, textColor;
+    if (each >= 1.5e6) { bgColor = 'rgba(46,204,113,0.15)'; textColor = 'var(--green)'; }
+    else if (each >= 0.5e6) { bgColor = 'rgba(243,156,18,0.15)'; textColor = 'var(--orange)'; }
+    else if (each > 0) { bgColor = 'rgba(212,165,55,0.15)'; textColor = 'var(--gold)'; }
+    else { bgColor = 'rgba(231,76,60,0.15)'; textColor = 'var(--red)'; }
+    const label = pct === 0 ? 'Базовая' : (pct > 0 ? '+' + pct + '%' : pct + '%');
+    html += `<div class="stress-card" style="background:${bgColor}"><div class="stress-price">${label}: ${fmtM(sp)}</div><div class="stress-profit" style="color:${textColor}">${fmtFull(each)}</div><div class="stress-each" style="color:${textColor}">каждому</div></div>`;
+  });
+  document.getElementById('stress-grid').innerHTML = html;
+}
+
+function buildScenarios(eachPerDeal) {
+  const deals = [3, 4, 5, 6, 8, 10];
+  let html = '';
+  const maxAnnual = Math.abs(eachPerDeal) * 10;
+  deals.forEach(d => {
+    const annual = eachPerDeal * d;
+    const w = maxAnnual > 0 ? Math.max(5, (Math.abs(annual) / maxAnnual) * 100) : 5;
+    const color = annual > 0 ? (d <= 4 ? 'var(--accent)' : d <= 6 ? 'var(--green)' : 'var(--gold)') : 'var(--red)';
+    html += `<div class="scenario-bar-wrap"><div class="scenario-label">${d} сделок/год</div><div class="scenario-bar-bg"><div class="scenario-bar" style="width:${w}%;background:${color}">${fmtM(annual)}</div></div><div class="scenario-val" style="color:${color}">${fmtM(annual)}</div></div>`;
+  });
+  document.getElementById('scenarios').innerHTML = html;
+}
+
+function buildTables(area, renoPrice, discount, sellDiscount, taxRate, deductPct) {
+  const areas = [30, 40, 50, 60, 75, 90];
+  const discounts = [20, 25, 30, 35];
+
+  let html = '<tr><th>Площадь</th>';
+  discounts.forEach(d => html += `<th>Скидка −${d}%</th>`);
+  html += '</tr>';
+  areas.forEach(a => {
+    html += `<tr><td class="row-header">${a} м²</td>`;
+    discounts.forEach(d => {
+      const marketNoR = MARKET_PM2 * a;
+      const buyP = marketNoR * (1 - d / 100);
+      const renoP = a * 45000;
+      const totalInv = buyP + renoP;
+      const marketWithR = MARKET_PM2_RENO * a;
+      const sellP = marketWithR * (1 - sellDiscount / 100);
+      const gross = sellP - totalInv;
+      const deductExp = buyP + renoP * deductPct;
+      const taxB = Math.max(0, sellP - deductExp);
+      const tax = taxB * taxRate;
+      const net = gross - tax;
+      const each = net / 2;
+      const maxBuy = buyP / 1e6;
+      let cls = each >= 1.5e6 ? 'highlight' : each >= 0.5e6 ? 'warn' : 'danger';
+      html += `<td class="${cls}">${maxBuy.toFixed(1)}</td>`;
+    });
+    html += '</tr>';
+  });
+  document.getElementById('tbl-buy').innerHTML = html;
+
+  const renoCosts = [1.5, 2.0, 2.5, 3.0, 3.5];
+  html = '<tr><th>Площадь</th>';
+  renoCosts.forEach(r => html += `<th>Ремонт ${r} млн</th>`);
+  html += '</tr>';
+  areas.forEach(a => {
+    html += `<tr><td class="row-header">${a} м²</td>`;
+    renoCosts.forEach(r => {
+      const marketNoR = MARKET_PM2 * a;
+      const buyP = marketNoR * (1 - discount / 100);
+      const renoP = r * 1e6;
+      const totalInv = buyP + renoP;
+      const marketWithR = MARKET_PM2_RENO * a;
+      const sellP = marketWithR * (1 - sellDiscount / 100);
+      const gross = sellP - totalInv;
+      const deductExp = buyP + renoP * deductPct;
+      const taxB = Math.max(0, sellP - deductExp);
+      const tax = taxB * taxRate;
+      const net = gross - tax;
+      const each = net / 2;
+      let cls = each >= 1.5e6 ? 'highlight' : each >= 0.5e6 ? 'warn' : each >= 0 ? '' : 'danger';
+      html += `<td class="${cls}">${(each / 1e6).toFixed(1)}</td>`;
+    });
+    html += '</tr>';
+  });
+  document.getElementById('tbl-profit').innerHTML = html;
+}
+
+calc();
+
+// Auto-load embedded CIAN data if available
+fetch('cian_data.json')
+  .then(r => r.ok ? r.json() : null)
+  .then(data => { if (data) loadJSON(data); })
+  .catch(() => {});
+</script>
+</body>
+</html>
