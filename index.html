@@ -472,11 +472,89 @@
   .flip-verdict.ok { background: rgba(243,156,18,0.2); color: var(--orange); }
   .flip-verdict.bad { background: rgba(231,76,60,0.2); color: var(--red); }
 
+  /* === FLIP ANALYSIS SECTION === */
+  .flip-analysis { margin-bottom: 24px; }
+
+  .flip-target-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .flip-target-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+  }
+  .flip-target-row .ftr-label { color: var(--gray); }
+  .flip-target-row .ftr-value { font-weight: 600; color: var(--white); }
+
+  .flip-financial-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .flip-fin-card {
+    background: var(--card2);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .flip-fin-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray); margin-bottom: 4px; }
+  .flip-fin-value { font-size: 18px; font-weight: 800; }
+
+  .flip-scenarios-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .flip-scenarios-table th {
+    background: var(--card2);
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .flip-scenarios-table td {
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.06);
+    font-weight: 500;
+  }
+  .flip-scenarios-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .flip-scenarios-table .roi-green { color: var(--green); font-weight: 700; }
+  .flip-scenarios-table .roi-accent { color: var(--accent); font-weight: 700; }
+  .flip-scenarios-table .roi-red { color: var(--red); font-weight: 700; }
+
+  .verdict-badge {
+    display: inline-block;
+    padding: 10px 28px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .verdict-enter { background: rgba(46,204,113,0.2); color: var(--green); border: 2px solid var(--green); }
+  .verdict-caution { background: rgba(243,156,18,0.2); color: var(--orange); border: 2px solid var(--orange); }
+  .verdict-skip { background: rgba(231,76,60,0.2); color: var(--red); border: 2px solid var(--red); }
+
+  .verdict-wrapper { text-align: center; padding: 16px 0; }
+
   @media (max-width: 900px) {
     .grid-top { grid-template-columns: 1fr; }
     .matrix-section { grid-template-columns: 1fr; }
     .ref-grid { grid-template-columns: 1fr; }
     .header h1 { font-size: 22px; }
+    .flip-target-info { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -550,6 +628,51 @@
         <thead id="listings-thead"></thead>
         <tbody id="listings-tbody"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- FLIP Analysis (conditional, only when target+flip in JSON) -->
+  <div id="flip-analysis-section" class="flip-analysis" style="display:none">
+    <div class="section-title">FLIP-анализ лота</div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Целевой лот</div>
+      <div class="flip-target-info">
+        <div>
+          <div class="flip-target-row"><span class="ftr-label">Адрес</span><span class="ftr-value" id="fa-address">—</span></div>
+          <div class="flip-target-row"><span class="ftr-label">Площадь</span><span class="ftr-value" id="fa-meters">—</span></div>
+          <div class="flip-target-row"><span class="ftr-label">Комнат</span><span class="ftr-value" id="fa-rooms">—</span></div>
+        </div>
+        <div>
+          <div class="flip-target-row"><span class="ftr-label">Цена на торгах</span><span class="ftr-value" id="fa-auction-price" style="color:var(--green)">—</span></div>
+          <div class="flip-target-row"><span class="ftr-label">Ссылка на торги</span><span class="ftr-value" id="fa-auction-link">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Финансовая сводка</div>
+      <div class="flip-financial-grid" id="fa-financial-grid"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Сценарии по срокам</div>
+      <table class="flip-scenarios-table" id="fa-scenarios-table">
+        <thead>
+          <tr>
+            <th>Срок</th>
+            <th>Стоимость денег Дениса</th>
+            <th>Налог</th>
+            <th>Чистая прибыль</th>
+            <th>На партнёра</th>
+            <th>ROI</th>
+          </tr>
+        </thead>
+        <tbody id="fa-scenarios-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="verdict-wrapper">
+      <span class="verdict-badge" id="fa-verdict-badge">—</span>
     </div>
   </div>
 
@@ -669,6 +792,16 @@
             <div class="funnel-sub" id="f-total-sub">364 т/м²</div>
           </div>
         </div>
+        <div class="funnel-arrow">▼ <span style="color:var(--orange)">+ стоимость денег</span></div>
+
+        <div class="funnel-step">
+          <div class="funnel-icon" style="background:rgba(243,156,18,0.15);color:var(--orange)">🏦</div>
+          <div class="funnel-info">
+            <div class="funnel-label">Стоимость денег Дениса (1.5%/мес × 2 мес)</div>
+            <div class="funnel-value" id="f-denis" style="color:var(--orange)">0 ₽</div>
+            <div class="funnel-sub" id="f-denis-sub">60 дней, 1.5% в месяц</div>
+          </div>
+        </div>
         <div class="funnel-arrow">▼ <span style="color:var(--gold)">продажа</span></div>
 
         <div class="funnel-step">
@@ -700,6 +833,7 @@
     <div class="kpi"><div class="kpi-label">Налог УСН</div><div class="kpi-value" id="kpi-tax" style="color:var(--red)">−200 т</div><div class="kpi-sub" id="kpi-tax-sub">5% с базы</div></div>
     <div class="kpi"><div class="kpi-label">Чистая прибыль</div><div class="kpi-value" id="kpi-net" style="color:var(--gold)">4.8 млн</div><div class="kpi-sub" id="kpi-net-sub">за 2 месяца</div></div>
     <div class="kpi"><div class="kpi-label">На каждого (50/50)</div><div class="kpi-value" id="kpi-each" style="color:var(--accent)">2.4 млн</div><div class="kpi-sub">за 2 месяца</div></div>
+    <div class="kpi"><div class="kpi-label">Деньги Дениса (60 дн)</div><div class="kpi-value" id="kpi-denis" style="color:var(--orange)">0 т</div><div class="kpi-sub" id="kpi-denis-sub">1.5%/мес × 2 мес</div></div>
     <div class="kpi"><div class="kpi-label">ROI на сделку</div><div class="kpi-value" id="kpi-roi" style="color:var(--green)">27%</div><div class="kpi-sub">на вложенный капитал</div></div>
     <div class="kpi"><div class="kpi-label">Годовая доходность</div><div class="kpi-value" id="kpi-annual" style="color:var(--gold)">162%</div><div class="kpi-sub" id="kpi-annual-sub">при 6 сделках/год</div></div>
   </div>
@@ -817,7 +951,101 @@ function loadJSON(data) {
     MARKET_PM2_RENO = data.market.price_m2_with_reno;
   }
   showCianUI();
+
+  if (data.target && data.flip) {
+    populateFlipAnalysis(data.target, data.flip);
+    autoSetSlidersFromTarget(data.target, data.flip);
+  }
+
   calc();
+}
+
+function populateFlipAnalysis(target, flip) {
+  const section = document.getElementById('flip-analysis-section');
+  section.style.display = '';
+
+  document.getElementById('fa-address').textContent = target.address || '—';
+  document.getElementById('fa-meters').textContent = target.meters + ' м²';
+  document.getElementById('fa-rooms').textContent = target.rooms + '-комн.';
+  document.getElementById('fa-auction-price').textContent = fmtFull(target.auction_price);
+
+  const linkEl = document.getElementById('fa-auction-link');
+  if (target.auction_url) {
+    linkEl.innerHTML = `<a href="${target.auction_url}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:12px">Открыть на торговой площадке ↗</a>`;
+  } else {
+    linkEl.textContent = '—';
+  }
+
+  const finItems = [
+    { label: 'Цена на торгах', value: fmtFull(flip.auction_price), color: 'var(--green)' },
+    { label: 'Стоимость ремонта', value: fmtFull(flip.renovation_cost), color: 'var(--orange)' },
+    { label: 'Итого вложения', value: fmtFull(flip.total_invest), color: 'var(--white)' },
+    { label: 'Рыночная (с рем.)', value: fmtFull(flip.market_price_reno), color: 'var(--purple)' },
+    { label: 'Цена продажи', value: fmtFull(flip.sale_price), color: 'var(--gold)' },
+    { label: 'Дисконт покупки', value: flip.discount_pct + '%', color: 'var(--green)' },
+  ];
+  let finHtml = '';
+  finItems.forEach(item => {
+    finHtml += `<div class="flip-fin-card"><div class="flip-fin-label">${item.label}</div><div class="flip-fin-value" style="color:${item.color}">${item.value}</div></div>`;
+  });
+  document.getElementById('fa-financial-grid').innerHTML = finHtml;
+
+  let tbodyHtml = '';
+  (flip.scenarios || []).forEach(sc => {
+    let roiClass = 'roi-red';
+    if (sc.roi_pct >= 20) roiClass = 'roi-green';
+    else if (sc.roi_pct >= 15) roiClass = 'roi-accent';
+
+    const warning = (sc.days === 90 && sc.roi_pct < 15) ? ' ⚠️' : '';
+    tbodyHtml += `<tr>
+      <td style="font-weight:700">${sc.days} дней${warning}</td>
+      <td style="color:var(--orange)">${fmtFull(sc.denis_cost)}</td>
+      <td style="color:var(--red)">${fmtFull(sc.tax)}</td>
+      <td style="font-weight:700;color:var(--gold)">${fmtFull(sc.net_profit)}</td>
+      <td style="font-weight:700;color:var(--accent)">${fmtFull(sc.per_partner)}</td>
+      <td class="${roiClass}">${sc.roi_pct.toFixed(1)}%</td>
+    </tr>`;
+  });
+  document.getElementById('fa-scenarios-tbody').innerHTML = tbodyHtml;
+
+  const verdictBadge = document.getElementById('fa-verdict-badge');
+  verdictBadge.textContent = flip.verdict;
+  verdictBadge.className = 'verdict-badge';
+  if (flip.verdict === 'ВХОДИТЬ') {
+    verdictBadge.classList.add('verdict-enter');
+  } else if (flip.verdict === 'ОСТОРОЖНО ВХОДИТЬ') {
+    verdictBadge.classList.add('verdict-caution');
+  } else {
+    verdictBadge.classList.add('verdict-skip');
+  }
+}
+
+function autoSetSlidersFromTarget(target, flip) {
+  const areaSlider = document.getElementById('sl-area');
+  const buySlider = document.getElementById('sl-buy');
+  const renoSlider = document.getElementById('sl-reno');
+
+  if (target.meters) {
+    const area = Math.round(target.meters);
+    areaSlider.value = Math.max(+areaSlider.min, Math.min(+areaSlider.max, area));
+  }
+
+  if (target.auction_price) {
+    const buyMln = target.auction_price / 1e6;
+    buySlider.value = Math.max(+buySlider.min, Math.min(+buySlider.max, buyMln.toFixed(1)));
+  }
+
+  if (flip.renovation_cost) {
+    const renoMln = flip.renovation_cost / 1e6;
+    renoSlider.value = Math.max(+renoSlider.min, Math.min(+renoSlider.max, renoMln.toFixed(1)));
+  }
+
+  if (flip.discount_pct) {
+    const discSlider = document.getElementById('sl-disc');
+    discSlider.value = Math.max(+discSlider.min, Math.min(+discSlider.max, Math.round(flip.discount_pct)));
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
 }
 
 function loadCSV(text) {
@@ -1047,12 +1275,13 @@ function calc() {
 
   const sellPrice = marketWithReno * (1 - sellDiscount / 100);
   const totalInvest = buyPrice + renoPrice;
+  const denisCost = totalInvest * 0.015 * 2;
   const grossProfit = sellPrice - totalInvest;
 
   const deductibleExpenses = buyPrice + renoPrice * deductPct;
   const taxBase = Math.max(0, sellPrice - deductibleExpenses);
   const tax = taxBase * taxRate;
-  const netProfit = grossProfit - tax;
+  const netProfit = grossProfit - tax - denisCost;
   const each = netProfit / 2;
 
   const roi = totalInvest > 0 ? (netProfit / totalInvest) * 100 : 0;
@@ -1076,6 +1305,8 @@ function calc() {
   document.getElementById('f-reno-sub').textContent = fmtK(renoPrice / area) + ' т/м²';
   document.getElementById('f-total').textContent = fmtM(totalInvest);
   document.getElementById('f-total-sub').textContent = fmtK(totalInvest / area) + ' т/м²';
+  document.getElementById('f-denis').textContent = fmt(denisCost) + ' ₽';
+  document.getElementById('f-denis-sub').textContent = '1.5%/мес × 2 мес от ' + fmtM(totalInvest);
   document.getElementById('f-market-reno').textContent = fmtM(marketWithReno);
   document.getElementById('f-market-reno-sub').textContent = fmtK(pricePerSqmWithReno) + ' т/м²';
   document.getElementById('f-sell-disc-text').textContent = sellDiscount === 0 ? 'по рыночной цене' : 'быстрая продажа −' + sellDiscount + '%';
@@ -1088,6 +1319,8 @@ function calc() {
   document.getElementById('kpi-gross').style.color = grossProfit > 0 ? 'var(--green)' : 'var(--red)';
   document.getElementById('kpi-tax').textContent = '−' + fmt(tax);
   document.getElementById('kpi-tax-sub').textContent = (taxRate * 100) + '% с базы ' + fmt(taxBase);
+  document.getElementById('kpi-denis').textContent = '−' + fmt(denisCost);
+  document.getElementById('kpi-denis-sub').textContent = '1.5%/мес × 2 мес от ' + fmtM(totalInvest);
   document.getElementById('kpi-net').textContent = fmt(netProfit);
   document.getElementById('kpi-net').style.color = netProfit > 0 ? 'var(--gold)' : 'var(--red)';
   document.getElementById('kpi-each').textContent = fmt(each);
@@ -1113,7 +1346,7 @@ function calc() {
     pz.style.background = 'linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05))';
   }
 
-  buildWaterfall(buyPrice, renoPrice, tax, sellPrice, netProfit);
+  buildWaterfall(buyPrice, renoPrice, denisCost, tax, sellPrice, netProfit);
   buildStress(totalInvest, deductibleExpenses, taxRate, sellPrice);
   buildScenarios(each);
   buildTables(area, renoPrice, discount, sellDiscount, taxRate, deductPct);
@@ -1123,12 +1356,13 @@ function calc() {
   }
 }
 
-function buildWaterfall(buyPrice, renoPrice, tax, sellPrice, netProfit) {
+function buildWaterfall(buyPrice, renoPrice, denisCost, tax, sellPrice, netProfit) {
   const maxVal = sellPrice;
   const h = 220;
   const items = [
     { label: 'Покупка', value: buyPrice, color: 'var(--accent)' },
     { label: 'Ремонт', value: renoPrice, color: 'var(--orange)' },
+    { label: 'Деньги Дениса', value: denisCost, color: 'var(--orange)' },
     { label: 'Налог', value: tax, color: 'var(--red)' },
     { label: 'Продажа', value: sellPrice, color: 'var(--gold)' },
     { label: 'Прибыль', value: netProfit, color: netProfit > 0 ? 'var(--green)' : 'var(--red)' },

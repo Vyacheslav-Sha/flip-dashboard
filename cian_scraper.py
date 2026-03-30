@@ -44,10 +44,15 @@ def parse_args():
     p.add_argument("--address", type=str, default=None, help="Фильтр по улице/адресу")
     p.add_argument("--district", type=str, default=None, help="Фильтр по району")
     p.add_argument("--auction-price", type=int, default=None, help="Цена на торгах для расчёта прибыли")
+    p.add_argument("--auction-url", type=str, default=None, help="URL лота на торгах")
     p.add_argument("--renovation-cost", type=int, default=None, help="Бюджет ремонта")
     p.add_argument("--area", type=float, default=None, help="Площадь объекта (м²) для flip-расчёта")
+    p.add_argument("--market-price-reno", type=int, default=None,
+                   help="Рыночная цена с ремонтом (ручной ввод)")
     p.add_argument("--headless", action="store_true", help="Без окна браузера")
     p.add_argument("--output", type=str, default=None, help="Имя CSV-файла")
+    p.add_argument("--json-output", type=str, default=None,
+                   help="Путь для JSON-файла дашборда")
     return p.parse_args()
 
 
@@ -336,46 +341,112 @@ def print_analysis(data, title):
     return {"avg_pm2": avg_pm2, "med_pm2": med_pm2, "avg_m": avg_m, "count": len(data)}
 
 
-def calculate_flip(avg_pm2, area, auction_price, renovation_cost=None):
+DENIS_RATE = 0.015          # 1.5% в месяц — стоимость денег Дениса
+RENO_PER_M2 = 35_000       # ремонт комфорт+ руб./м2
+FURNITURE_FIX = 500_000    # мебель + техника (фикс)
+TAX_RATE = 0.05            # УСН 5%
+DEDUCT_PCT = 0.85          # доля расходов к вычету
+SELL_DISCOUNT = 0.05       # дисконт быстрой продажи
+MIN_ROI = 0.15             # минимальный ROI 15%
+SCENARIOS_DAYS = [45, 60, 90]
+
+
+def calc_scenario(cost, sale_price, days):
+    """Расчёт одного сценария продажи с учётом денег Дениса."""
+    months = days / 30
+    denis_cost = int(cost * DENIS_RATE * months)
+    deductible = cost * DEDUCT_PCT
+    tax_base = max(0, sale_price - deductible)
+    tax = int(tax_base * TAX_RATE)
+    gross = sale_price - cost
+    net = gross - tax - denis_cost
+    roi = net / cost if cost > 0 else 0
+    return {
+        "days": days, "months": round(months, 1),
+        "denis_cost": denis_cost, "tax": tax,
+        "gross": gross, "net": net,
+        "per_partner": net // 2, "roi": roi,
+    }
+
+
+def flip_verdict(scenarios):
+    """Вердикт по матрице ROI/дисконт."""
+    s60 = next((s for s in scenarios if s["days"] == 60), scenarios[0])
+    if s60["roi"] >= 0.20:
+        return "ВХОДИТЬ"
+    if s60["roi"] >= MIN_ROI:
+        return "ОСТОРОЖНО ВХОДИТЬ"
+    return "НЕ ВХОДИТЬ"
+
+
+def calculate_flip(avg_pm2, area, auction_price, renovation_cost=None,
+                   market_price_reno=None):
     market_price = int(avg_pm2 * area)
     if renovation_cost is None:
-        renovation_cost = int(area * 45_000)
+        renovation_cost = int(area * RENO_PER_M2 + FURNITURE_FIX)
 
     total_invest = auction_price + renovation_cost
-    sale_reno = int(market_price * 1.15)
-    sale_price = int(sale_reno * 0.95)
-    gross = sale_price - total_invest
 
-    deductible = auction_price + int(renovation_cost * 0.6)
-    taxable = max(0, sale_price - deductible)
-    tax = int(taxable * 0.05)
-    net = gross - tax
+    if market_price_reno is None:
+        market_price_reno = int(market_price * 1.15)
+    sale_price = int(market_price_reno * (1 - SELL_DISCOUNT))
 
-    discount = (1 - auction_price / market_price) * 100
+    discount = (1 - auction_price / market_price) * 100 if market_price else 0
 
-    print(f"\n{'=' * 64}")
-    print(f"  FLIP-РАСЧЁТ СДЕЛКИ")
-    print(f"{'=' * 64}")
-    print(f"  Площадь объекта:          {area:.1f} м²")
-    print(f"  Рыночная (без ремонта):   {format_price(market_price)}")
-    print(f"  Цена на торгах:           {format_price(auction_price)}")
-    print(f"  Дисконт от рынка:         {discount:.1f}%")
-    print(f"{'─' * 64}")
-    print(f"  Ремонт + матер. + мебель: {format_price(renovation_cost)}")
-    print(f"  Себестоимость:            {format_price(total_invest)}")
-    print(f"  Рыночная с ремонтом:      {format_price(sale_reno)}")
-    print(f"  Цена продажи (−5% рынка): {format_price(sale_price)}")
-    print(f"{'─' * 64}")
-    print(f"  Валовая прибыль:          {format_price(gross)}")
-    print(f"  Налог УСН 5%:             {format_price(tax)}")
-    print(f"  Чистая прибыль:           {format_price(net)}")
-    print(f"  На каждого (50/50):       {format_price(net // 2)}")
-    if total_invest > 0:
-        print(f"  ROI сделки:               {net / total_invest * 100:.1f}%")
-        print(f"  ROI годовой (6 сд./год):  {net / total_invest * 100 * 6:.1f}%")
-    v = "ВЫГОДНО" if net > 500_000 else "МАРЖА МАЛА" if net > 0 else "УБЫТОК"
-    print(f"  Вердикт:                  {v}")
-    print(f"{'=' * 64}")
+    scenarios = [calc_scenario(total_invest, sale_price, d) for d in SCENARIOS_DAYS]
+    verdict = flip_verdict(scenarios)
+
+    print(f"\n{'=' * 72}")
+    print(f"  FLIP-АНАЛИЗ")
+    print(f"{'=' * 72}")
+    print(f"  Площадь объекта:            {area:.1f} м²")
+    print(f"  Рыночная (без ремонта):     {format_price(market_price)}")
+    print(f"  Цена на торгах:             {format_price(auction_price)}")
+    print(f"  Дисконт от рынка:           −{discount:.1f}%")
+    print(f"{'─' * 72}")
+    print(f"  Ремонт ({area:.0f}м² × {RENO_PER_M2//1000}т):     "
+          f"{format_price(int(area * RENO_PER_M2))}")
+    print(f"  Мебель + техника:           {format_price(FURNITURE_FIX)}")
+    print(f"  СЕБЕСТОИМОСТЬ:              {format_price(total_invest)}")
+    print(f"{'─' * 72}")
+    print(f"  Рыночная с ремонтом:        {format_price(market_price_reno)}")
+    print(f"  Цена продажи (−{SELL_DISCOUNT*100:.0f}%):        "
+          f"{format_price(sale_price)}")
+    print(f"{'─' * 72}")
+    print(f"  СЦЕНАРИИ (деньги Дениса {DENIS_RATE*100:.1f}%/мес):")
+    print(f"  ┌{'─'*10}┬{'─'*14}┬{'─'*12}┬{'─'*14}┬{'─'*14}┬{'─'*9}┐")
+    print(f"  │{'Срок':^10}│{'Деньги Ден.':^14}│{'Налог':^12}│"
+          f"{'Чист.приб.':^14}│{'На партнёра':^14}│{'ROI':^9}│")
+    print(f"  ├{'─'*10}┼{'─'*14}┼{'─'*12}┼{'─'*14}┼{'─'*14}┼{'─'*9}┤")
+    for s in scenarios:
+        flag = " ⚠️" if s["roi"] < MIN_ROI else ""
+        print(f"  │{s['days']:>4} дн  │"
+              f"{format_price(s['denis_cost']):>13} │"
+              f"{format_price(s['tax']):>11} │"
+              f"{format_price(s['net']):>13} │"
+              f"{format_price(s['per_partner']):>13} │"
+              f"{s['roi']*100:>6.1f}% │{flag}")
+    print(f"  └{'─'*10}┴{'─'*14}┴{'─'*12}┴{'─'*14}┴{'─'*14}┴{'─'*9}┘")
+    print(f"{'─' * 72}")
+    print(f"  ВЕРДИКТ: {verdict}")
+    s60 = next((s for s in scenarios if s["days"] == 60), scenarios[0])
+    print(f"  ROI (60 дн): {s60['roi']*100:.1f}% | "
+          f"На партнёра: {format_price(s60['per_partner'])}")
+    if any(s["roi"] < 0.10 for s in scenarios if s["days"] == 90):
+        print(f"  ⚠️  КРИТИЧЕСКИЙ РИСК: при 90 днях ROI < 10%")
+    print(f"{'=' * 72}")
+
+    return {
+        "market_price": market_price,
+        "market_price_reno": market_price_reno,
+        "auction_price": auction_price,
+        "renovation_cost": renovation_cost,
+        "total_invest": total_invest,
+        "sale_price": sale_price,
+        "discount_pct": round(discount, 1),
+        "scenarios": scenarios,
+        "verdict": verdict,
+    }
 
 
 def save_csv(data, filename):
@@ -389,7 +460,7 @@ def save_csv(data, filename):
     print(f"\n  CSV: {filepath}")
 
 
-def save_dashboard_json(data, json_path=None):
+def save_dashboard_json(data, json_path=None, target=None, flip_result=None):
     """Сохранить JSON с данными и аналитикой для FLIP Dashboard."""
     if not data:
         return
@@ -419,6 +490,9 @@ def save_dashboard_json(data, json_path=None):
                 "count": len(vals),
             }
 
+    avg_pm2 = int(sum(pm2) / len(pm2))
+    med_pm2 = int(sorted(pm2)[len(pm2) // 2])
+
     dashboard_data = {
         "meta": {
             "date": datetime.now().strftime("%d.%m.%Y %H:%M"),
@@ -432,9 +506,9 @@ def save_dashboard_json(data, json_path=None):
             "min_price": min(prices),
             "max_price": max(prices),
             "avg_meters": round(sum(meters) / len(meters), 1) if meters else 0,
-            "avg_price_m2": int(sum(pm2) / len(pm2)),
-            "med_price_m2": int(sorted(pm2)[len(pm2) // 2]),
-            "price_m2_with_reno": int(sum(pm2) / len(pm2) * 1.22),
+            "avg_price_m2": avg_pm2,
+            "med_price_m2": med_pm2,
+            "price_m2_with_reno": int(avg_pm2 * 1.22),
         },
         "districts": district_stats,
         "listings": [
@@ -457,6 +531,32 @@ def save_dashboard_json(data, json_path=None):
             for d in data if d["price"] > 0
         ],
     }
+
+    if target:
+        dashboard_data["target"] = target
+
+    if flip_result:
+        dashboard_data["flip"] = {
+            "auction_price": flip_result["auction_price"],
+            "renovation_cost": flip_result["renovation_cost"],
+            "total_invest": flip_result["total_invest"],
+            "market_price_reno": flip_result["market_price_reno"],
+            "sale_price": flip_result["sale_price"],
+            "discount_pct": flip_result["discount_pct"],
+            "verdict": flip_result["verdict"],
+            "denis_rate_pct": DENIS_RATE * 100,
+            "scenarios": [
+                {
+                    "days": s["days"],
+                    "denis_cost": s["denis_cost"],
+                    "tax": s["tax"],
+                    "net_profit": s["net"],
+                    "per_partner": s["per_partner"],
+                    "roi_pct": round(s["roi"] * 100, 1),
+                }
+                for s in flip_result["scenarios"]
+            ],
+        }
 
     if not json_path:
         json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cian_data.json")
@@ -557,17 +657,33 @@ def main():
     else:
         stats = print_analysis(all_listings, "Москва — 2-комн.")
 
+    flip_result = None
+    target_info = None
+
     if args.auction_price and stats:
         area = args.area or stats["avg_m"]
-        calculate_flip(
+        flip_result = calculate_flip(
             stats["avg_pm2"], area,
-            args.auction_price, args.renovation_cost
+            args.auction_price, args.renovation_cost,
+            market_price_reno=args.market_price_reno,
         )
+        target_info = {
+            "address": args.address or "",
+            "meters": area,
+            "rooms": args.rooms,
+            "auction_price": args.auction_price,
+            "auction_url": args.auction_url or "",
+        }
 
     ts = datetime.now().strftime("%Y%m%d_%H%M")
     filename = args.output or f"cian_{args.rooms}комн_{ts}.csv"
     save_csv(all_listings, filename)
-    save_dashboard_json(all_listings)
+    save_dashboard_json(
+        all_listings,
+        json_path=args.json_output,
+        target=target_info,
+        flip_result=flip_result,
+    )
 
 
 if __name__ == "__main__":
