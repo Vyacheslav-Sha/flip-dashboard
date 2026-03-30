@@ -549,6 +549,81 @@
 
   .verdict-wrapper { text-align: center; padding: 16px 0; }
 
+  /* === SOLD ANALOGS (FACT-CHECK) === */
+  .sold-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sold-table th {
+    background: var(--card2);
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--green);
+    border-bottom: 2px solid rgba(46,204,113,0.3);
+  }
+  .sold-table td {
+    padding: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    white-space: nowrap;
+  }
+  .sold-table tr:hover td { background: rgba(46,204,113,0.04); }
+  .sold-table a { color: var(--accent); text-decoration: none; }
+  .sold-table a:hover { text-decoration: underline; }
+
+  .sold-summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .sold-summary-card {
+    background: var(--card2);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    border: 1px solid rgba(46,204,113,0.1);
+  }
+  .sold-summary-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray); margin-bottom: 4px; }
+  .sold-summary-value { font-size: 18px; font-weight: 800; color: var(--green); }
+
+  .exposure-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--card2);
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .exposure-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  /* === SOURCES SECTION === */
+  .sources-list { list-style: none; padding: 0; }
+  .sources-list li {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sources-list li:hover { background: rgba(0,180,216,0.04); }
+  .source-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .source-badge.sold { background: rgba(46,204,113,0.2); color: var(--green); }
+  .source-badge.active { background: rgba(0,180,216,0.2); color: var(--accent); }
+  .source-link { color: var(--accent); text-decoration: none; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .source-link:hover { text-decoration: underline; }
+  .source-meta { color: var(--gray); font-size: 11px; flex-shrink: 0; }
+
   @media (max-width: 900px) {
     .grid-top { grid-template-columns: 1fr; }
     .matrix-section { grid-template-columns: 1fr; }
@@ -673,6 +748,34 @@
 
     <div class="verdict-wrapper">
       <span class="verdict-badge" id="fa-verdict-badge">—</span>
+    </div>
+
+    <!-- Sold analogs fact-check -->
+    <div id="fa-sold-section" class="card" style="display:none;margin-top:16px">
+      <div class="card-title" style="color:var(--green)">Факт-чек: проданные аналоги</div>
+      <div class="sold-summary-cards" id="fa-sold-summary"></div>
+      <div style="overflow-x:auto">
+        <table class="sold-table" id="fa-sold-table">
+          <thead>
+            <tr>
+              <th>Адрес</th>
+              <th>Площадь</th>
+              <th>Цена</th>
+              <th>₽/м²</th>
+              <th>Дней на рынке</th>
+              <th>Дата снятия</th>
+              <th>Ссылка</th>
+            </tr>
+          </thead>
+          <tbody id="fa-sold-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sources -->
+    <div id="fa-sources-section" class="card" style="display:none;margin-top:16px">
+      <div class="card-title">Источники данных</div>
+      <ul class="sources-list" id="fa-sources-list"></ul>
     </div>
   </div>
 
@@ -950,12 +1053,22 @@ function loadJSON(data) {
     MARKET_PM2 = data.market.avg_price_m2;
     MARKET_PM2_RENO = data.market.price_m2_with_reno;
   }
+  if (data.market_stats) {
+    MARKET_PM2 = data.market_stats.avg_price_m2_active || data.market_stats.avg_price_m2 || MARKET_PM2;
+    MARKET_PM2_RENO = data.market_stats.price_m2_with_reno || Math.round(MARKET_PM2 * 1.22);
+  }
   showCianUI();
 
   if (data.target && data.flip) {
     populateFlipAnalysis(data.target, data.flip);
     autoSetSlidersFromTarget(data.target, data.flip);
   }
+
+  if (data.sold_analogs && data.sold_analogs.length) {
+    populateSoldAnalogs(data.sold_analogs);
+  }
+
+  populateSources(data);
 
   calc();
 }
@@ -1018,6 +1131,105 @@ function populateFlipAnalysis(target, flip) {
   } else {
     verdictBadge.classList.add('verdict-skip');
   }
+}
+
+function populateSoldAnalogs(soldAnalogs) {
+  const section = document.getElementById('fa-sold-section');
+  section.style.display = '';
+
+  const prices = soldAnalogs.map(s => s.price_last_seen || s.price || 0).filter(p => p > 0);
+  const meters = soldAnalogs.map(s => s.meters || 0).filter(m => m > 0);
+  const pm2s = soldAnalogs.map(s => s.price_m2 || (s.price_last_seen && s.meters ? Math.round(s.price_last_seen / s.meters) : 0)).filter(v => v > 0);
+  const days = soldAnalogs.map(s => s.days_on_market || 0).filter(d => d > 0);
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+  const median = arr => { if (!arr.length) return 0; const s = [...arr].sort((a,b) => a-b); const m = Math.floor(s.length/2); return s.length % 2 ? s[m] : Math.round((s[m-1]+s[m])/2); };
+
+  const summaryCards = [
+    { label: 'Проданных', value: soldAnalogs.length + ' шт.', color: 'var(--green)' },
+    { label: 'Средняя цена', value: fmtM(avg(prices)), color: 'var(--white)' },
+    { label: 'Средняя ₽/м²', value: fmtK(avg(pm2s)) + ' т', color: 'var(--green)' },
+    { label: 'Медиана ₽/м²', value: fmtK(median(pm2s)) + ' т', color: 'var(--green)' },
+    { label: 'Средний срок', value: avg(days) + ' дн.', color: 'var(--accent)' },
+  ];
+
+  let summaryHtml = '';
+  summaryCards.forEach(c => {
+    summaryHtml += `<div class="sold-summary-card"><div class="sold-summary-label">${c.label}</div><div class="sold-summary-value" style="color:${c.color}">${c.value}</div></div>`;
+  });
+  document.getElementById('fa-sold-summary').innerHTML = summaryHtml;
+
+  const maxDays = Math.max(...days, 90);
+  let tbodyHtml = '';
+  soldAnalogs.forEach(s => {
+    const price = s.price_last_seen || s.price || 0;
+    const m = s.meters || 0;
+    const pm2 = s.price_m2 || (price && m ? Math.round(price / m) : 0);
+    const d = s.days_on_market || 0;
+    const barW = maxDays > 0 ? Math.round((d / maxDays) * 100) : 0;
+    const barColor = d <= 30 ? 'var(--green)' : d <= 60 ? 'var(--orange)' : 'var(--red)';
+    const addr = s.address || '—';
+    const removed = s.removed_date || '—';
+    const url = s.url || '';
+
+    tbodyHtml += `<tr>
+      <td>${addr}</td>
+      <td>${m ? m + ' м²' : '—'}</td>
+      <td style="font-weight:700">${price ? fmtM(price) : '—'}</td>
+      <td style="color:var(--green)">${pm2 ? fmtK(pm2) + ' т' : '—'}</td>
+      <td>
+        <div>${d ? d + ' дн.' : '—'}</div>
+        ${d ? `<div class="exposure-bar"><div class="exposure-fill" style="width:${barW}%;background:${barColor}"></div></div>` : ''}
+      </td>
+      <td style="color:var(--gray)">${removed}</td>
+      <td>${url ? `<a href="${url}" target="_blank">ЦИАН ↗</a>` : '—'}</td>
+    </tr>`;
+  });
+  document.getElementById('fa-sold-tbody').innerHTML = tbodyHtml;
+}
+
+function populateSources(data) {
+  const sources = [];
+
+  if (data.sold_analogs) {
+    data.sold_analogs.forEach((s, i) => {
+      if (s.url) sources.push({ type: 'sold', label: s.address || `Проданная кв. #${i+1}`, url: s.url, meta: s.price_last_seen ? fmtM(s.price_last_seen) : '' });
+    });
+  }
+
+  if (data.active_analogs) {
+    data.active_analogs.forEach((a, i) => {
+      if (a.url) sources.push({ type: 'active', label: a.address || `Аналог #${i+1}`, url: a.url, meta: a.price ? fmtM(a.price) + ', ' + fmtK(a.price_m2 || 0) + ' т/м²' : '' });
+    });
+  }
+
+  if (data.listings) {
+    data.listings.slice(0, 10).forEach((l, i) => {
+      if (l.url) sources.push({ type: 'active', label: `${l.street || ''} ${l.house || ''} — ${l.rooms || '?'}-к, ${l.meters || '?'} м²`.trim(), url: l.url, meta: l.price ? fmtM(l.price) : '' });
+    });
+  }
+
+  if (data.target && data.target.auction_url) {
+    sources.unshift({ type: 'sold', label: 'Торговая площадка — лот', url: data.target.auction_url, meta: data.target.auction_price ? fmtM(data.target.auction_price) : '' });
+  }
+
+  if (!sources.length) return;
+
+  const section = document.getElementById('fa-sources-section');
+  section.style.display = '';
+
+  let html = '';
+  sources.forEach((s, i) => {
+    const badgeCls = s.type === 'sold' ? 'sold' : 'active';
+    const badgeText = s.type === 'sold' ? 'Продана' : 'Активное';
+    html += `<li>
+      <span style="color:var(--gray);font-size:11px;width:20px">[${i+1}]</span>
+      <span class="source-badge ${badgeCls}">${badgeText}</span>
+      <a class="source-link" href="${s.url}" target="_blank">${s.label}</a>
+      <span class="source-meta">${s.meta}</span>
+    </li>`;
+  });
+  document.getElementById('fa-sources-list').innerHTML = html;
 }
 
 function autoSetSlidersFromTarget(target, flip) {
