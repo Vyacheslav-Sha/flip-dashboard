@@ -1,0 +1,54 @@
+name: Bug report
+description: Сообщить об ошибке в расчётах или интерфейсе
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо! Заполните поля ниже — так мы быстрее воспроизведём проблему.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Что сломалось?
+      placeholder: Кратко опишите проблему
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как воспроизвести
+      placeholder: |
+        1. Открыл ...
+        2. Выставил параметры ...
+        3. Нажал ...
+        4. Получил ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемое поведение
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Фактическое поведение
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Браузер / версия
+      placeholder: Chrome 123, Safari 18, Firefox 126
+
+  - type: textarea
+    id: data
+    attributes:
+      label: Данные (если ошибка связана с JSON/CSV)
+      description: Вставьте безопасный фрагмент без персональных данных

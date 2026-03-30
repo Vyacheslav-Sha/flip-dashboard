@@ -1,0 +1,31 @@
+name: Feature request
+description: Предложить новую функцию или улучшение
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую задачу решаем?
+      placeholder: Какая боль/ограничение сейчас есть
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Предложенное решение
+      placeholder: Как именно это должно работать
+    validations:
+      required: true
+
+  - type: textarea
+    id: economics
+    attributes:
+      label: Экономический эффект
+      placeholder: Как влияет на точность/скорость принятия решений/доходность
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Альтернативы
+      placeholder: Какие варианты уже рассматривали
